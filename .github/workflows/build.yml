@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build plugin
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(grep -E '^version *= *"' build.gradle.kts | sed -E 's/.*"(.*)".*/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "jar=build/libs/ZelDuelsAnnouncer-$VERSION.jar" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZelDuelsAnnouncer-${{ steps.version.outputs.version }}
+          path: ${{ steps.version.outputs.jar }}
+
+      - name: Test on a real Paper 26.3 server
+        run: bash .github/scripts/test-server.sh "${{ steps.version.outputs.jar }}" 26.3
+
+      - name: Publish release (only when the version changed)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          JAR: ${{ steps.version.outputs.jar }}
+        run: |
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "Release v$VERSION already exists - bump the version in build.gradle.kts to publish a new one."
+          else
+            gh release create "v$VERSION" "$JAR" \
+              --title "ZelDuelsAnnouncer $VERSION" \
+              --notes "Download ZelDuelsAnnouncer-$VERSION.jar below and put it in your plugins folder (ZelDuels must be installed)."
+          fi

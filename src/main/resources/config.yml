@@ -1,0 +1,33 @@
+# ZelDuelsAnnouncer - announces ZelDuels results to the whole server.
+#
+# Messages use MiniMessage formatting: https://docs.advntr.dev/minimessage/format.html
+#   e.g. <red>, <gold>, <bold>, <#ff8800>, <gradient:gold:yellow>text</gradient>
+#
+# Placeholders:
+#   <winner>   name of the player who won
+#   <loser>    name of the player who lost
+#   <kit>      kit used in the duel (or "no-kit-name" below if there was no kit)
+#   <arena>    arena type name
+#   <hearts>   winner's hearts left, e.g. 7 or 3.5
+#   <health>   winner's raw health points, e.g. 7.0 (20 = full)
+#   <player1> / <player2>   the two players (useful for the timeout message)
+#
+# After editing, run /zdannouncer reload
+
+no-kit-name: "No Kit"
+
+messages:
+  # A player was defeated normally.
+  win:
+    enabled: true
+    text: "<gold><bold>DUEL</bold></gold> <dark_gray>»</dark_gray> <green><winner></green> <gray>just defeated</gray> <red><loser></red> <gray>in</gray> <yellow><kit></yellow> <gray>with</gray> <red><hearts>❤</red> <gray>left!</gray>"
+
+  # The loser left the arena or disconnected mid-duel.
+  forfeit:
+    enabled: true
+    text: "<gold><bold>DUEL</bold></gold> <dark_gray>»</dark_gray> <green><winner></green> <gray>won against</gray> <red><loser></red> <gray>in</gray> <yellow><kit></yellow> <gray>- <loser> ran away!</gray>"
+
+  # The match timer ran out with no winner.
+  timeout:
+    enabled: false
+    text: "<gold><bold>DUEL</bold></gold> <dark_gray>»</dark_gray> <yellow><player1></yellow> <gray>and</gray> <yellow><player2></yellow> <gray>ran out of time in</gray> <yellow><kit></yellow><gray>. It's a draw!</gray>"
